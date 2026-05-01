@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>設計圖板 Prompt 工具 - Studio Poster v2</title>
+<style>
+:root{
+  --bg:#f3efe7;
+  --panel:#fffdf8;
+  --ink:#1f1d1a;
+  --muted:#72695c;
+  --line:#d7ccbc;
+  --accent:#7b5b3f;
+  --accent-2:#29464d;
+  --accent-3:#b68b53;
+  --soft:#f2e8db;
+  --danger:#9b4638;
+  --ok:#315347;
+  --shadow:0 10px 28px rgba(32,25,18,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+body{min-height:100vh}
+a{color:inherit}
+.app-shell{display:grid;grid-template-columns:360px 1fr;min-height:100vh}
+.sidebar{background:linear-gradient(180deg,#30281f 0%,#463727 100%);color:#fbf7ef;padding:28px 24px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar h1{font-size:22px;line-height:1.25;margin:0 0 10px;letter-spacing:.03em}
+.sidebar .subtitle{font-size:13px;color:#d8c8b2;margin:0 0 22px}
+.badge{display:inline-flex;gap:6px;align-items:center;font-size:12px;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:5px 10px;color:#f7ebd8;background:rgba(255,255,255,.08);margin:3px 4px 3px 0}
+.nav-block{margin-top:24px;border-top:1px solid rgba(255,255,255,.16);padding-top:20px}
+.nav-block h2{font-size:13px;color:#f2d8b7;margin:0 0 10px;text-transform:uppercase;letter-spacing:.08em}
+.step-link{display:block;font-size:14px;padding:8px 10px;border-radius:10px;color:#f8f0e6;text-decoration:none;margin:3px 0;background:transparent}
+.step-link:hover{background:rgba(255,255,255,.1)}
+.main{padding:32px;max-width:1420px;width:100%;margin:0 auto}
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:var(--shadow);margin-bottom:24px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-80px;top:-100px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(182,139,83,.28),transparent 65%)}
+.hero h2{font-size:30px;margin:0 0 8px;letter-spacing:.02em}.hero p{margin:0;color:var(--muted);max-width:900px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:8px}.card h3 small{font-size:12px;color:var(--muted);font-weight:400}
+.col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
+label{display:block;font-size:13px;font-weight:700;color:#3a322a;margin:14px 0 6px}.hint{font-size:12px;color:var(--muted);margin-top:5px}.inline-hint{font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
+input[type="text"],input[type="number"],textarea,select{width:100%;border:1px solid var(--line);background:#fffaf3;color:var(--ink);border-radius:12px;padding:10px 12px;font:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+textarea{min-height:98px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--accent-3);box-shadow:0 0 0 3px rgba(182,139,83,.18)}
+.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.checkbox-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.checkbox-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr))}.check-item{display:flex;gap:8px;align-items:flex-start;background:#fbf3e8;border:1px solid #eadcc9;border-radius:12px;padding:8px 9px;font-size:13px}.check-item input{margin-top:3px;accent-color:var(--accent)}
+.slider-line{display:grid;grid-template-columns:1fr 58px;gap:10px;align-items:center}.slider-line input[type="range"]{width:100%;accent-color:var(--accent)}.slider-value{text-align:center;background:#f7ead9;border:1px solid #e3d0b9;border-radius:999px;padding:4px 6px;font-size:12px;color:#4b3827}.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0}.btn{border:none;border-radius:999px;padding:10px 15px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(78,54,32,.18);transition:transform .12s,opacity .12s}.btn.secondary{background:#29464d}.btn.ghost{background:#f6ebdc;color:#3f3328;border:1px solid #dfceb9;box-shadow:none}.btn.danger{background:var(--danger)}.btn.ok{background:var(--ok)}.btn:hover{transform:translateY(-1px);opacity:.94}.btn:active{transform:translateY(0)}
+.output-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.output-box{background:#1f1d1a;color:#f8f1e8;border-radius:18px;padding:16px;min-height:280px;max-height:620px;overflow:auto;white-space:pre-wrap;font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace;font-size:12.5px;line-height:1.65}.output-box.light{background:#fffaf3;color:#2f2924;border:1px solid var(--line)}
+.section-title{margin:28px 0 12px;font-size:22px}.pill-row{display:flex;gap:8px;flex-wrap:wrap}.status{font-size:13px;padding:8px 10px;border-radius:12px;background:#f3e7d6;color:#57402c;border:1px solid #e3d0b8}.status.ok{background:#e5f0e9;color:#294f3b;border-color:#bdd7c8}.status.warn{background:#fff3d4;color:#765a1b;border-color:#efd182}
+.template-preview{border:1px dashed #d2c0aa;border-radius:16px;background:linear-gradient(135deg,#fffaf3,#f1e4d4);padding:16px;color:#4b4238;font-size:13px;min-height:220px}.template-preview .board{height:280px;border-radius:10px;border:1px solid #cebba4;background:#f8f3eb;display:grid;grid-template-columns:1.15fr .85fr;grid-template-rows:1fr 1fr;gap:8px;padding:10px}.template-preview .cell{border:1px solid #d9c8b3;border-radius:7px;background:rgba(255,255,255,.65);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:#725d47;padding:6px}.template-preview .cell.main{grid-row:span 2;background:#efe1cf;color:#493929;font-weight:800}
+.image-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.image-card{border:1px solid var(--line);background:#fffaf3;border-radius:12px;padding:8px}.image-card img{width:100%;height:90px;object-fit:cover;border-radius:8px;border:1px solid #e1d3c0}.image-card input{margin-top:6px}.history-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.history-item{border:1px solid var(--line);border-radius:14px;background:#fffaf3;padding:10px;cursor:pointer}.history-item:hover{border-color:var(--accent-3)}.history-item strong{font-size:12px;display:block}.history-item span{font-size:11px;color:var(--muted)}
+.lang-toggle{display:flex;gap:8px;margin-top:14px}.lang-toggle button{flex:1}.notice{padding:12px 14px;border-radius:14px;background:#f7ecdc;border:1px solid #e5d3bd;color:#4a3a29;font-size:13px}.notice strong{color:#2c2118}.footer-note{font-size:12px;color:#7c6f60;margin-top:18px}.divider{height:1px;background:var(--line);margin:18px 0}.mini-code{background:#f5eadc;border:1px solid #e2cfb8;border-radius:10px;padding:8px 10px;font-family:monospace;font-size:12px;color:#4c3a29}.hidden{display:none!important}
+@media (max-width:1060px){.app-shell{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.main{padding:20px}.col-4,.col-6,.col-8,.col-12{grid-column:span 12}.output-grid{grid-template-columns:1fr}.row,.row-3,.row-4{grid-template-columns:1fr}.checkbox-grid,.checkbox-grid.compact{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <h1 data-i18n="appTitle">設計圖板 Prompt 工具</h1>
+    <p class="subtitle" data-i18n="appSubtitle">Studio Poster v2：一站式視覺化設計驅動引擎</p>
+    <div class="pill-row">
+      <span class="badge">Prompt</span><span class="badge">Board</span><span class="badge">AI Studio</span><span class="badge">Bilingual</span>
+    </div>
+    <div class="lang-toggle">
+      <button class="btn ghost" data-lang="zh">繁中</button>
+      <button class="btn ghost" data-lang="en">English</button>
+    </div>
+    <div class="nav-block">
+      <h2>Workflow</h2>
+      <a class="step-link" href="#project" data-i18n="navProject">01 專案設定</a>
+      <a class="step-link" href="#reference" data-i18n="navReference">02 參考圖與抽象轉譯</a>
+      <a class="step-link" href="#board" data-i18n="navBoard">03 圖板結構</a>
+      <a class="step-link" href="#style" data-i18n="navStyle">04 風格與參數</a>
+      <a class="step-link" href="#prompt" data-i18n="navPrompt">05 Prompt 輸出</a>
+      <a class="step-link" href="#history" data-i18n="navHistory">06 歷史生成</a>
+    </div>
+    <div class="nav-block">
+      <h2>Output Contract</h2>
+      <p class="subtitle" data-i18n="contractText">輸出包含：短版 Prompt、完整 Prompt、負面 Prompt、JSON 規格與 Midjourney/SDXL 參數。</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="hero">
+      <h2 data-i18n="heroTitle">AI 建築／室內／景觀圖板 Prompt 生成器</h2>
+      <p data-i18n="heroText">將概念來源、設計任務、圖板分區、材料、風格、參數與限制條件整合成可直接用於 GPT、Gemini、Midjourney、SDXL、ComfyUI 或其他多模態模型的專業提示詞。</p>
+      <div class="toolbar">
+        <button class="btn" id="generateBtn" data-i18n="generate">生成 Prompt</button>
+        <button class="btn secondary" id="copyFullBtn" data-i18n="copyFull">複製完整 Prompt</button>
+        <button class="btn ghost" id="downloadJsonBtn" data-i18n="downloadJson">下載 JSON</button>
+        <button class="btn ghost" id="downloadTxtBtn" data-i18n="downloadTxt">下載 TXT</button>
+      </div>
+    </section>
+
+    <section class="grid" id="project">
+      <div class="card col-8">
+        <h3 data-i18n="projectSettings">專案設定 <small>Project Overview</small></h3>
+        <div class="row">
+          <div>
+            <label data-i18n="designTask">設計任務名稱</label>
+            <input type="text" id="designTask" value="01_Modern_Storefront_Facade" />
+          </div>
+          <div>
+            <label data-i18n="projectType">專案類型</label>
+            <select id="projectType">
+              <option value="storefront facade design">建築店面立面 Storefront facade</option>
+              <option value="residential design">住宅建築 Residential</option>
+              <option value="interior design">室內設計 Interior</option>
+              <option value="landscape design">景觀設計 Landscape</option>
+              <option value="facade system design">建築立面系統 Facade system</option>
+              <option value="exhibition pavilion design">展示／臨時建築 Pavilion</option>
+              <option value="urban public space design">都市公共空間 Urban public space</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label data-i18n="theme">設計主題</label>
+            <input type="text" id="theme" value="現代店面立面轉譯 / Modern storefront facade transformation" />
+          </div>
+          <div>
+            <label data-i18n="site">基地／場域</label>
+            <input type="text" id="site" value="台南，台灣 / Tainan, Taiwan" />
+          </div>
+        </div>
+        <label data-i18n="designIntent">設計意圖描述</label>
+        <textarea id="designIntent">以抽象參考圖的形式、色彩、肌理、比例與動態節奏，轉譯為現代建築立面語言；強調材料層次、入口姿態、光影表現與都市街角識別。</textarea>
+      </div>
+
+      <div class="card col-4">
+        <h3 data-i18n="templatePreview">圖板模板預覽</h3>
+        <div class="template-preview">
+          <div class="board" id="templatePreviewBoard">
+            <div class="cell main">Main Render<br/>主視覺</div>
+            <div class="cell">Massing<br/>演化</div>
+            <div class="cell">Details<br/>細部</div>
+          </div>
+        </div>
+        <label data-i18n="coreTemplate">核心模板</label>
+        <select id="coreTemplate">
+          <option value="three-section-studio-board">三段式 Studio Board</option>
+          <option value="competition-vertical-board">競圖型垂直圖板</option>
+          <option value="technical-sequential-board">技術序列型圖板</option>
+          <option value="hero-render-diagram-board">主透視＋圖解型圖板</option>
+          <option value="research-infographic-board">研究資訊圖表型圖板</option>
+        </select>
+      </div>
+    </section>
+
+    <h2 class="section-title" id="reference" data-i18n="referenceTitle">02 參考圖與抽象轉譯</h2>
+    <section class="grid">
+      <div class="card col-6">
+        <h3 data-i18n="imageUpload">參考圖上傳與標註</h3>
+        <input type="file" id="imageUpload" accept="image/*" multiple />
+        <div class="hint" data-i18n="imageHint">可上傳多張概念參考圖。工具只保留本機預覽，不會上傳伺服器。</div>
+        <div class="image-list" id="imageList"></div>
+        <label data-i18n="referenceMode">參考圖使用方式</label>
+        <select id="referenceMode">
+          <option value="abstract inspiration only">僅作為抽象靈感，不直接複製</option>
+          <option value="material and atmosphere reference">材料與氛圍參考</option>
+          <option value="form rhythm reference">形式節奏參考</option>
+          <option value="color and texture reference">色彩與肌理參考</option>
+        </select>
+        <label data-i18n="extractedCues">抽取特徵關鍵字</label>
+        <textarea id="extractedCues">form, color palette, texture, tonal contrast, proportion, movement, rhythm, repetition, porosity, material articulation, spatial hierarchy</textarea>
+      </div>
+      <div class="card col-6">
+        <h3 data-i18n="transformationRules">轉譯規則與禁止事項</h3>
+        <div class="checkbox-grid">
+          <label class="check-item"><input type="checkbox" class="rule" value="Do not copy the original subject literally." checked><span>不得直接複製原始主體</span></label>
+          <label class="check-item"><input type="checkbox" class="rule" value="Do not reproduce any face, head, body outline, animal form, biological silhouette, or creature-like shape." checked><span>不得出現臉、頭、身體輪廓、生物外形</span></label>
+          <label class="check-item"><input type="checkbox" class="rule" value="Transform abstract cues into architectural language, facade rhythm, material layering, structural expression, lighting strategy, and spatial hierarchy." checked><span>轉譯為建築語言、立面節奏與材料層次</span></label>
+          <label class="check-item"><input type="checkbox" class="rule" value="The final result must be an architectural or spatial transformation, not a direct imitation." checked><span>成果必須是建築／空間轉化，而非模仿</span></label>
+          <label class="check-item"><input type="checkbox" class="rule" value="Maintain professional competition-grade composition and premium editorial typography." checked><span>維持競圖級構圖與高級編排</span></label>
+          <label class="check-item"><input type="checkbox" class="rule" value="Use bilingual English and Traditional Chinese annotations." checked><span>使用英文與繁體中文雙語標註</span></label>
+        </div>
+        <label data-i18n="negativePrompt">負面 Prompt 補充</label>
+        <textarea id="negativePrompt">literal animal, creature, face, head, eyes, body silhouette, cartoon, low quality, messy layout, unreadable text, distorted architecture, copied biological figure, overdecorated, cluttered board</textarea>
+      </div>
+    </section>
+
+    <h2 class="section-title" id="board" data-i18n="boardTitle">03 圖板結構與內容模組</h2>
+    <section class="grid">
+      <div class="card col-8">
+        <h3 data-i18n="sections">圖板分區</h3>
+        <div class="row-3">
+          <div>
+            <label>Section 1</label>
+            <select id="section1">
+              <option value="BIG-style conceptual massing evolution diagrams with step-by-step annotated transformation">BIG-style 概念量體演化</option>
+              <option value="concept source analysis and design DNA extraction">概念來源與設計 DNA 萃取</option>
+              <option value="site context and environmental response diagrams">基地環境回應圖</option>
+            </select>
+          </div>
+          <div>
+            <label>Section 2</label>
+            <select id="section2">
+              <option value="main photorealistic architectural rendering with facade / spatial design scheme">主要照片級建築渲染</option>
+              <option value="floor plan, section, elevation, and circulation diagram">平面、剖面、立面與動線</option>
+              <option value="interior perspective and material atmosphere board">室內透視與材料氛圍</option>
+            </select>
+          </div>
+          <div>
+            <label>Section 3</label>
+            <select id="section3">
+              <option value="technical details, material palette, structural system, lighting strategy, and environmental performance">技術細部、材料、結構、光環境</option>
+              <option value="alternative views, detail close-ups, evening ambience, and human activities">多視角、細部、夜景與人群活動</option>
+              <option value="workflow diagram, AI generation logic, and output contract">工作流圖、AI 邏輯與輸出契約</option>
+            </select>
+          </div>
+        </div>
+        <label data-i18n="mustInclude">必須包含元素</label>
+        <div class="checkbox-grid compact">
+          <label class="check-item"><input type="checkbox" class="include" value="main hero rendering" checked><span>Main Render</span></label>
+          <label class="check-item"><input type="checkbox" class="include" value="3 to 4 alternative perspective views" checked><span>3-4 Views</span></label>
+          <label class="check-item"><input type="checkbox" class="include" value="conceptual massing evolution diagrams" checked><span>Massing</span></label>
+          <label class="check-item"><input type="checkbox" class="include" value="floor plan and section diagrams" checked><span>Plan/Section</span></label>
+          <label class="check-item"><input type="checkbox" class="include" value="facade detail close-up" checked><span>Detail</span></label>
+          <label class="check-item"><input type="checkbox" class="include" value="material palette and sustainability labels" checked><span>Materials</span></label>
+          <label class="check-item"><input type="checkbox" class="include" value="human activities and circulation paths" checked><span>People/Flow</span></label>
+          <label class="check-item"><input type="checkbox" class="include" value="environmental analysis overlays such as sun, wind, green belt, shading" checked><span>Climate</span></label>
+          <label class="check-item"><input type="checkbox" class="include" value="bilingual English and Traditional Chinese annotations" checked><span>Bilingual</span></label>
+        </div>
+      </div>
+      <div class="card col-4">
+        <h3 data-i18n="layoutSettings">版面設定</h3>
+        <label data-i18n="aspectRatio">比例</label>
+        <select id="aspectRatio">
+          <option value="vertical 3:4 composition">垂直 3:4</option>
+          <option value="vertical 9:16 composition">垂直 9:16</option>
+          <option value="landscape 16:9 composition">橫式 16:9</option>
+          <option value="square 1:1 composition">方形 1:1</option>
+        </select>
+        <label data-i18n="layoutDirection">構圖方向</label>
+        <select id="layoutDirection">
+          <option value="clean grid layout with premium typography">乾淨網格＋高級字體</option>
+          <option value="editorial magazine layout with strong visual hierarchy">雜誌編排＋強階層</option>
+          <option value="technical sequential composition with diagrams and annotations">技術序列＋圖解標註</option>
+          <option value="mixed-media architectural board with render and hand-drawn overlays">混合媒材建築圖板</option>
+        </select>
+        <label data-i18n="annotationDensity">標註密度</label>
+        <div class="slider-line"><input type="range" id="annotationDensity" min="1" max="10" value="7"><span class="slider-value" id="annotationDensityVal">7</span></div>
+        <label data-i18n="diagramRatio">圖解比例</label>
+        <div class="slider-line"><input type="range" id="diagramRatio" min="1" max="10" value="6"><span class="slider-value" id="diagramRatioVal">6</span></div>
+      </div>
+    </section>
+
+    <h2 class="section-title" id="style" data-i18n="styleTitle">04 風格、材料與生成參數</h2>
+    <section class="grid">
+      <div class="card col-4">
+        <h3 data-i18n="visualStyle">視覺風格</h3>
+        <label data-i18n="stylePreset">風格預設</label>
+        <select id="stylePreset">
+          <option value="Scandinavian minimalist architecture, clean geometry, warm neutral tones, refined materiality">北歐極簡建築</option>
+          <option value="parametric contemporary architecture, precise rhythm, porous facade, strong light-shadow performance">參數化當代建築</option>
+          <option value="cinematic photorealistic architecture, atmospheric lighting, editorial composition">電影感照片級建築</option>
+          <option value="gallery-like luxury interior, sculptural furniture, soft daylight, premium textures">藝廊靜奢室內</option>
+          <option value="bioclimatic tropical architecture, porous envelope, passive cooling, lush landscape integration">熱帶氣候回應建築</option>
+        </select>
+        <label data-i18n="renderMethod">表現方式</label>
+        <select id="renderMethod">
+          <option value="mixed-media architectural render combining photorealistic visualization, hand-drawn annotations, technical sketches, conceptual diagrams, and editorial typography">混合媒材建築表現</option>
+          <option value="photorealistic architectural visualization with precise material and lighting">照片級建築渲染</option>
+          <option value="white clay model rendering with ambient occlusion and clean shadows">白模黏土渲染</option>
+          <option value="HUD-style holographic technical infographic overlay on realistic architecture">HUD 全息技術圖解</option>
+        </select>
+      </div>
+      <div class="card col-4">
+        <h3 data-i18n="materiality">材料與空間特徵</h3>
+        <label data-i18n="materials">主要材料</label>
+        <textarea id="materials">warm timber, glass, exposed concrete, perforated metal, aluminum panels, soft neutral plaster</textarea>
+        <label data-i18n="spatialFeatures">空間／立面特徵</label>
+        <textarea id="spatialFeatures">modern glass storefront, elegant entrance, layered facade, rhythmic vertical fins, deep shaded openings, evening ambience, urban street context</textarea>
+      </div>
+      <div class="card col-4">
+        <h3 data-i18n="generationParams">生成參數</h3>
+        <label>Quality</label>
+        <select id="quality">
+          <option value="high resolution, 8k, professional, competition-grade">高解析競圖級</option>
+          <option value="clean, precise, presentation-ready">乾淨精準簡報級</option>
+          <option value="ultra detailed, cinematic, premium editorial">超細節電影編輯級</option>
+        </select>
+        <label>Chaos <span class="inline-hint">Midjourney</span></label>
+        <div class="slider-line"><input type="range" id="chaos" min="0" max="100" value="20"><span class="slider-value" id="chaosVal">20</span></div>
+        <label>Stylize <span class="inline-hint">Midjourney</span></label>
+        <div class="slider-line"><input type="range" id="stylize" min="0" max="1000" value="250"><span class="slider-value" id="stylizeVal">250</span></div>
+        <label>CFG Scale <span class="inline-hint">SDXL</span></label>
+        <div class="slider-line"><input type="range" id="cfg" min="1" max="15" value="7"><span class="slider-value" id="cfgVal">7</span></div>
+      </div>
+    </section>
+
+    <h2 class="section-title" id="prompt" data-i18n="promptTitle">05 Prompt 輸出</h2>
+    <section class="grid">
+      <div class="card col-12">
+        <div class="toolbar" style="margin-top:0">
+          <span class="status ok" id="statusText" data-i18n="statusReady">已就緒：可生成 Prompt</span>
+          <button class="btn ghost" id="saveHistoryBtn" data-i18n="saveHistory">儲存到歷史生成</button>
+          <button class="btn ghost" id="resetBtn" data-i18n="reset">重設範例</button>
+        </div>
+        <div class="divider"></div>
+        <div class="output-grid">
+          <div>
+            <h3 data-i18n="fullPrompt">完整 Prompt</h3>
+            <div class="output-box" id="fullPromptOutput"></div>
+          </div>
+          <div>
+            <h3 data-i18n="jsonSpec">JSON 規格</h3>
+            <div class="output-box light" id="jsonOutput"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <h2 class="section-title" id="history" data-i18n="historyTitle">06 歷史生成區</h2>
+    <section class="grid">
+      <div class="card col-8">
+        <h3 data-i18n="historyList">歷史版本</h3>
+        <div class="history-list" id="historyList"></div>
+        <p class="footer-note" data-i18n="historyHint">點擊歷史版本可重新載入當時的參數狀態。資料儲存在瀏覽器 localStorage。</p>
+      </div>
+      <div class="card col-4">
+        <h3 data-i18n="workflowExport">工作流輸出</h3>
+        <div class="notice"><strong>AI Studio Core Spec</strong><br/><span data-i18n="workflowText">本工具可作為 AI Studio / Vibe Coding 專題的前端 prompt generator 原型，支援下拉式選單、滑桿、歷史生成、JSON 輸出與雙語 UI。</span></div>
+        <label>YAML Stub</label>
+        <div class="mini-code">workflow: studio-poster-v2<br/>input: project + reference + board + style<br/>output: prompt + negative + json</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="prompt-llm-design02-studio-poster-v2.js"></script>
+</body>
+</html>
